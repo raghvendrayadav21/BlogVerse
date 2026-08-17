@@ -19,11 +19,12 @@ public class CorsConfig {
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Allow frontend origins (add production domain here)
+        // Allow frontend origins (including Vercel deployment URLs)
         config.setAllowedOriginPatterns(List.of(
-                "http://localhost:3000",
-                "http://localhost:5173",
-                "https://*.blogverse.app"
+                "http://localhost:*",
+                "https://*.vercel.app",
+                "https://*.onrender.com",
+                "*"
         ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
