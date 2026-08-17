@@ -1,4 +1,4 @@
-# Multi-stage Docker build for BlogVerse Microservices Deployment
+# Multi-stage Docker build optimized for Render 512MB RAM Free Tier
 FROM maven:3.9.9-eclipse-temurin-21 AS build
 WORKDIR /app
 
@@ -10,21 +10,10 @@ RUN mvn clean package -DskipTests -f backend/pom.xml
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-# Copy all microservice JAR artifacts from build stage
-COPY --from=build /app/backend/eureka-server/target/eureka-server-1.0.0.jar eureka-server.jar
-COPY --from=build /app/backend/auth-service/target/auth-service-1.0.0.jar auth-service.jar
-COPY --from=build /app/backend/user-service/target/user-service-1.0.0.jar user-service.jar
-COPY --from=build /app/backend/post-service/target/post-service-1.0.0.jar post-service.jar
-COPY --from=build /app/backend/interaction-service/target/interaction-service-1.0.0.jar interaction-service.jar
-COPY --from=build /app/backend/media-service/target/media-service-1.0.0.jar media-service.jar
-COPY --from=build /app/backend/notification-service/target/notification-service-1.0.0.jar notification-service.jar
-COPY --from=build /app/backend/api-gateway/target/api-gateway-1.0.0.jar api-gateway.jar
-
-# Copy entrypoint script
-COPY scripts/entrypoint.sh entrypoint.sh
-RUN chmod +x entrypoint.sh
+# Copy unified single-JVM artifact
+COPY --from=build /app/backend/blogverse-unified/target/blogverse-unified-1.0.0.jar app.jar
 
 ENV PORT 8080
-EXPOSE 8080 8761 8081 8088 8083 8084 8085 8086
+EXPOSE 8080
 
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["java", "-Xms128m", "-Xmx256m", "-jar", "app.jar"]

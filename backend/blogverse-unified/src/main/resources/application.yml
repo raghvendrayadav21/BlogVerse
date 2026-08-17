@@ -1,0 +1,43 @@
+spring:
+  main:
+    allow-circular-references: true
+  application:
+    name: blogverse-unified
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:blogverse;DB_CLOSE_DELAY=-1;MODE=MySQL;CASE_INSENSITIVE_IDENTIFIERS=TRUE}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.h2.Driver}
+
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb+srv://blogverse_admin:Raghav21@cluster0.5lryr4c.mongodb.net/blogverse?retryWrites=true&w=majority}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        default_batch_fetch_size: 20
+
+server:
+  port: ${PORT:8080}
+
+jwt:
+  secret: ${JWT_SECRET:default_secret_replace_in_production_minimum_64_chars_long_here_blogverse_2026}
+  access-token-expiration-ms: 900000
+  refresh-token-expiration-ms: 604800000
+  issuer: blogverse-auth
+
+eureka:
+  client:
+    enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
