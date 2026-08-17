@@ -273,11 +273,11 @@ public class AuthServiceImpl implements AuthService {
             payload.put("profileImageUrl", user.getProfileImageUrl());
             payload.put("bio", user.getBio());
 
-            // Calls user-service directly via localhost:8088
-            String userServiceUrl = "http://localhost:8088/api/internal/users";
+            String userServicePort = System.getProperty("USER_SERVICE_PORT", System.getenv("USER_SERVICE_PORT") != null ? System.getenv("USER_SERVICE_PORT") : "8088");
+            String userServiceUrl = System.getenv("USER_SERVICE_URL") != null ? System.getenv("USER_SERVICE_URL") : "http://localhost:" + userServicePort + "/api/internal/users";
             restTemplate.postForObject(userServiceUrl, payload, Object.class);
             log.info("Synced user {} with user-service", user.getId());
-        } catch (Exception e) {
+        } catch (Throwable e) {
             log.warn("Failed to sync user {} to user-service: {}", user.getId(), e.getMessage());
         }
     }
