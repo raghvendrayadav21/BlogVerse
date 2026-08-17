@@ -1,19 +1,16 @@
-# Multi-stage Docker build optimized for Render 512MB RAM Free Tier
+# ─── Stage 1: Build blogverse-app monolith ───────────────────────────
 FROM maven:3.9.9-eclipse-temurin-21 AS build
 WORKDIR /app
+COPY backend/blogverse-app/pom.xml ./pom.xml
+COPY backend/blogverse-app/src ./src
+RUN mvn clean package -DskipTests
 
-# Copy pom.xml files and backend source code
-COPY backend/ ./backend/
-RUN mvn clean package -DskipTests -f backend/pom.xml
-
-# Runtime Stage with OpenJDK 21 JRE
+# ─── Stage 2: Runtime (lean JRE) ─────────────────────────────────────
 FROM eclipse-temurin:21-jre
 WORKDIR /app
+COPY --from=build /app/target/blogverse-app-1.0.0.jar app.jar
 
-# Copy unified single-JVM artifact
-COPY --from=build /app/backend/blogverse-unified/target/blogverse-unified-1.0.0.jar app.jar
-
-ENV PORT 8080
+ENV PORT=8080
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-Xms128m", "-Xmx256m", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Xms128m", "-Xmx384m", "-jar", "app.jar"]

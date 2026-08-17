@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: blogverse-app
+
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb+srv://blogverse_admin:Raghav21@cluster0.5lryr4c.mongodb.net/blogverse?retryWrites=true&w=majority}
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: ${PORT:8080}
+
+jwt:
+  secret: ${JWT_SECRET:blogverse_production_jwt_secret_key_minimum_64_characters_required_here_2026}
+  access-token-expiration-ms: 900000
+  refresh-token-expiration-ms: 604800000
+  issuer: blogverse-auth
+
+app:
+  upload-dir: ${UPLOAD_DIR:uploads}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.blogverse.app: INFO
+    org.springframework.security: WARN
+    root: WARN
