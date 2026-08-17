@@ -8,6 +8,10 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.h2.Driver}
 
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb+srv://blogverse_admin:Raghav21@cluster0.5lryr4c.mongodb.net/blogverse?retryWrites=true&w=majority}
+
   jpa:
     hibernate:
       ddl-auto: update
