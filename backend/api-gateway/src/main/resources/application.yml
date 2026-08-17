@@ -1,0 +1,119 @@
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:3000"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+
+      # Global default filters applied to all routes
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+      routes:
+        # ─── Auth Service ──────────────────────────────────────────────
+        - id: auth-service
+          uri: ${AUTH_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/auth/**, /oauth2/**, /login/oauth2/**
+          filters:
+            - StripPrefix=0
+
+        # ─── User Service ──────────────────────────────────────────────
+        - id: user-service
+          uri: ${USER_SERVICE_URL:http://localhost:8088}
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=0
+
+        # ─── Interaction Service ───────────────────────────────────────
+        - id: interaction-service
+          uri: ${INTERACTION_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/posts/*/like, /api/posts/*/comments, /api/posts/*/comments/**, /api/posts/*/bookmark, /api/posts/*/share, /api/posts/*/report, /api/posts/bookmarks/**, /api/posts/reports/**, /api/posts/user/*/liked, /api/comments/**, /api/bookmarks/**, /api/shares/**
+          filters:
+            - StripPrefix=0
+
+        # ─── Post Service ──────────────────────────────────────────────
+        - id: post-service
+          uri: ${POST_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/posts/**
+          filters:
+            - StripPrefix=0
+
+        # ─── Media Service ─────────────────────────────────────────────
+        - id: media-service
+          uri: ${MEDIA_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/api/media/**
+          filters:
+            - StripPrefix=0
+
+        # ─── Notification Service ──────────────────────────────────────
+        - id: notification-service
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8086}
+          predicates:
+            - Path=/api/notifications/**
+          filters:
+            - StripPrefix=0
+
+        # ─── Search Service ────────────────────────────────────────────
+        - id: search-service
+          uri: ${SEARCH_SERVICE_URL:http://localhost:8087}
+          predicates:
+            - Path=/api/search/**
+          filters:
+            - StripPrefix=0
+
+server:
+  port: ${GATEWAY_PORT:8080}
+
+# JWT configuration
+jwt:
+  secret: ${JWT_SECRET:default_secret_replace_in_production_minimum_64_chars_long_here}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://admin:admin123@localhost:8761/eureka/}
+    registry-fetch-interval-seconds: 5
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    gateway:
+      enabled: true
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    com.blogverse.gateway: DEBUG
+    root: INFO
+
