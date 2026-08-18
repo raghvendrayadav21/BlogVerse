@@ -58,6 +58,7 @@ export interface Post {
   hashtags?: string[];
   mentions?: string[];
   mediaList?: Media[];
+  coverImageUrl?: string;
   isLiked?: boolean;
   isBookmarked?: boolean;
   isFollowingAuthor?: boolean;
@@ -81,6 +82,7 @@ export interface CreatePostRequest {
   hashtags?: string[];
   mentions?: string[];
   mediaIds?: number[];
+  coverImageUrl?: string;
 }
 
 // ─── Comment Types ──────────────────────────────────────────────────

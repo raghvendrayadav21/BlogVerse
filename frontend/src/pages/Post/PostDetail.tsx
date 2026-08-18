@@ -193,6 +193,25 @@ export default function PostDetailPage() {
           {post.content}
         </div>
 
+        {/* Media Image / Video */}
+        {((post.mediaList && post.mediaList.length > 0) || post.coverImageUrl) && (
+          <div style={{ marginBottom: 28, borderRadius: 18, overflow: 'hidden', border: `1px solid ${borderColor}` }}>
+            {(() => {
+              const mediaUrl = post.coverImageUrl || (post.mediaList && post.mediaList[0]?.mediaUrl);
+              const isVideo = mediaUrl && (mediaUrl.toLowerCase().endsWith('.mp4') || mediaUrl.toLowerCase().endsWith('.webm') || mediaUrl.toLowerCase().endsWith('.ogg') || mediaUrl.includes('video') || mediaUrl.includes('_mp4') || mediaUrl.includes('_webm'));
+              if (isVideo) {
+                return (
+                  <video controls preload="metadata" style={{ width: '100%', maxHeight: 420, background: '#000', outline: 'none' }}>
+                    <source src={mediaUrl} />
+                    Your browser does not support the video tag.
+                  </video>
+                );
+              }
+              return <img src={mediaUrl} alt="post media" style={{ width: '100%', maxHeight: 400, objectFit: 'cover' }} />;
+            })()}
+          </div>
+        )}
+
         {/* Hashtags */}
         {post.hashtags && post.hashtags.length > 0 && (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 28 }}>

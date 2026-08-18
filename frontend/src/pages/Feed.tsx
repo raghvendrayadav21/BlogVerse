@@ -7,7 +7,7 @@ import { notificationsApi } from '../api/notifications';
 import { TrendingUp, Sparkles, Send, Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, X, Check, UserPlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import type { Post, User } from '../types';
 
@@ -168,10 +168,22 @@ function PostCard({ post }: { post: Post }) {
         </p>
       </Link>
 
-      {/* Media Image */}
-      {post.mediaList && post.mediaList.length > 0 && (
+      {/* Media Image / Video */}
+      {((post.mediaList && post.mediaList.length > 0) || post.coverImageUrl) && (
         <div style={{ marginBottom: 14, borderRadius: 14, overflow: 'hidden', border: `1px solid ${borderColor}` }}>
-          <img src={post.mediaList[0].mediaUrl} alt="post media" style={{ width: '100%', maxHeight: 320, objectFit: 'cover' }} />
+          {(() => {
+            const mediaUrl = post.coverImageUrl || (post.mediaList && post.mediaList[0]?.mediaUrl);
+            const isVideo = mediaUrl && (mediaUrl.toLowerCase().endsWith('.mp4') || mediaUrl.toLowerCase().endsWith('.webm') || mediaUrl.toLowerCase().endsWith('.ogg') || mediaUrl.includes('video') || mediaUrl.includes('_mp4') || mediaUrl.includes('_webm'));
+            if (isVideo) {
+              return (
+                <video controls preload="metadata" style={{ width: '100%', maxHeight: 360, background: '#000', outline: 'none' }}>
+                  <source src={mediaUrl} />
+                  Your browser does not support the video tag.
+                </video>
+              );
+            }
+            return <img src={mediaUrl} alt="post media" style={{ width: '100%', maxHeight: 320, objectFit: 'cover' }} />;
+          })()}
         </div>
       )}
 
@@ -244,6 +256,14 @@ export default function FeedPage() {
   const [postContent, setPostContent] = useState('');
   const [hashtagsInput, setHashtagsInput] = useState('');
 
+  // Media upload states & refs
+  const [attachedMediaUrl, setAttachedMediaUrl] = useState('');
+  const [attachedMediaType, setAttachedMediaType] = useState<'IMAGE' | 'VIDEO' | ''>('');
+  const [isUploading, setIsUploading] = useState(false);
+
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+
   // Backend Feed Query
   const { data: feedData } = useInfiniteQuery({
     queryKey: ['feed'],
@@ -301,6 +321,35 @@ export default function FeedPage() {
     }
   };
 
+  const handleFileUpload = async (file: File, type: 'IMAGE' | 'VIDEO') => {
+    setIsUploading(true);
+    setIsQuickPostOpen(true); // Open quick post inline form immediately
+    try {
+      const res = await postsApi.uploadMediaFile(file);
+      if (res.success && res.data?.url) {
+        setAttachedMediaUrl(res.data.url);
+        setAttachedMediaType(type);
+        toast.success(`${type === 'IMAGE' ? 'Photo' : 'Video'} uploaded successfully!`);
+      } else {
+        toast.error('Upload failed. Please try again.');
+      }
+    } catch (err) {
+      toast.error('Upload error occurred');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFileUpload(file, 'IMAGE');
+  };
+
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFileUpload(file, 'VIDEO');
+  };
+
   const handleCreateQuickPost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!postContent.trim()) {
@@ -325,6 +374,7 @@ export default function FeedPage() {
       viewCount: 1,
       readingTimeMinutes: Math.max(1, Math.ceil(postContent.trim().split(/\s+/).length / 200)),
       hashtags: hashtagsInput.split(',').map(t => t.trim().replace(/^#/, '')).filter(Boolean),
+      coverImageUrl: attachedMediaUrl || undefined,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       isLiked: true,
@@ -338,6 +388,7 @@ export default function FeedPage() {
         postType: 'BLOG',
         visibility: 'PUBLIC',
         hashtags: newPost.hashtags,
+        coverImageUrl: newPost.coverImageUrl,
       });
       queryClient.invalidateQueries({ queryKey: ['feed'] });
     } catch {}
@@ -346,6 +397,8 @@ export default function FeedPage() {
     setPostTitle('');
     setPostContent('');
     setHashtagsInput('');
+    setAttachedMediaUrl('');
+    setAttachedMediaType('');
     setIsQuickPostOpen(false);
     toast.success('Post published to Home feed! 🎉');
   };
@@ -379,14 +432,13 @@ export default function FeedPage() {
 
           <div style={{ display: 'flex', gap: 8 }}>
             {[
-              { emoji: '📷', label: 'Photo' },
-              { emoji: '🎥', label: 'Video' },
-              { emoji: '✍️', label: 'Blog' },
-              { emoji: '#️⃣', label: 'Hashtag' },
+              { emoji: '📷', label: 'Photo', action: () => imageInputRef.current?.click() },
+              { emoji: '🎥', label: 'Video', action: () => videoInputRef.current?.click() },
+              { emoji: '✍️', label: 'Blog', action: () => setIsQuickPostOpen(true) },
             ].map(item => (
               <button
                 key={item.label}
-                onClick={() => setIsQuickPostOpen(true)}
+                onClick={item.action}
                 style={{
                   flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px', borderRadius: 12,
                   background: 'none', border: 'none', cursor: 'pointer', color: mutedColor, fontSize: 13, fontWeight: 600,
@@ -399,6 +451,22 @@ export default function FeedPage() {
               </button>
             ))}
           </div>
+
+          {/* Hidden File Inputs */}
+          <input
+            type="file"
+            ref={imageInputRef}
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleImageChange}
+          />
+          <input
+            type="file"
+            ref={videoInputRef}
+            accept="video/*"
+            style={{ display: 'none' }}
+            onChange={handleVideoChange}
+          />
         </motion.div>
 
         {/* Quick Post Inline Form */}
@@ -443,11 +511,39 @@ export default function FeedPage() {
                   className="input"
                   style={{ borderRadius: 10, fontSize: 13 }}
                 />
+
+                {/* Media Uploading / Preview */}
+                {isUploading && (
+                  <div style={{ padding: 12, textAlign: 'center', background: 'rgba(139,92,246,0.06)', borderRadius: 10, border: `1px dashed ${borderColor}` }}>
+                    <span style={{ fontSize: 13, color: mutedColor }}>Uploading media... ⏳</span>
+                  </div>
+                )}
+
+                {attachedMediaUrl && (
+                  <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', border: `1px solid ${borderColor}`, padding: 4, background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)' }}>
+                    {attachedMediaType === 'IMAGE' ? (
+                      <img src={attachedMediaUrl} alt="attached media" style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 8 }} />
+                    ) : (
+                      <video src={attachedMediaUrl} controls style={{ width: '100%', maxHeight: 220, borderRadius: 8 }} />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => { setAttachedMediaUrl(''); setAttachedMediaType(''); }}
+                      style={{
+                        position: 'absolute', right: 12, top: 12, background: 'rgba(239, 68, 68, 0.9)', border: 'none',
+                        color: 'white', padding: 5, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      }}
+                    >
+                      <X size={15} />
+                    </button>
+                  </div>
+                )}
+
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 6 }}>
                   <button type="button" onClick={() => setIsQuickPostOpen(false)} className="btn btn-secondary" style={{ padding: '8px 16px', borderRadius: 10, fontSize: 13 }}>
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary" style={{ padding: '8px 20px', borderRadius: 10, fontSize: 13, gap: 6 }}>
+                  <button type="submit" disabled={isUploading} className="btn btn-primary" style={{ padding: '8px 20px', borderRadius: 10, fontSize: 13, gap: 6 }}>
                     <Send size={15} /> Publish Post
                   </button>
                 </div>
