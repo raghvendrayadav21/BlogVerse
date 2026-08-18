@@ -29,14 +29,14 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<ApiResponse<User>> getProfile(@PathVariable Long userId) {
+    public ResponseEntity<ApiResponse<User>> getProfile(@PathVariable("userId") Long userId) {
         User user = userService.getUser(userId);
         return ResponseEntity.ok(ApiResponse.success("Profile fetched", user));
     }
 
     @PutMapping("/{userId}")
     public ResponseEntity<ApiResponse<User>> updateProfile(
-            @PathVariable Long userId,
+            @PathVariable("userId") Long userId,
             @RequestBody Map<String, Object> updates,
             @AuthenticationPrincipal UserPrincipal principal) {
         if (!principal.getUserId().equals(userId)) {
@@ -56,7 +56,7 @@ public class UserController {
 
     @PostMapping("/{userId}/follow")
     public ResponseEntity<ApiResponse<Void>> follow(
-            @PathVariable Long userId,
+            @PathVariable("userId") Long userId,
             @AuthenticationPrincipal UserPrincipal principal) {
         userService.followUser(principal.getUserId(), userId);
         return ResponseEntity.ok(ApiResponse.success("Followed", null));
@@ -64,7 +64,7 @@ public class UserController {
 
     @DeleteMapping("/{userId}/follow")
     public ResponseEntity<ApiResponse<Void>> unfollow(
-            @PathVariable Long userId,
+            @PathVariable("userId") Long userId,
             @AuthenticationPrincipal UserPrincipal principal) {
         userService.unfollowUser(principal.getUserId(), userId);
         return ResponseEntity.ok(ApiResponse.success("Unfollowed", null));
@@ -72,18 +72,18 @@ public class UserController {
 
     @GetMapping("/{userId}/followers")
     public ResponseEntity<ApiResponse<Page<User>>> getFollowers(
-            @PathVariable Long userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @PathVariable("userId") Long userId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size) {
         Page<User> followers = userService.getFollowers(userId, page, size);
         return ResponseEntity.ok(ApiResponse.success("Followers fetched", followers));
     }
 
     @GetMapping("/{userId}/following")
     public ResponseEntity<ApiResponse<Page<User>>> getFollowing(
-            @PathVariable Long userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @PathVariable("userId") Long userId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size) {
         Page<User> following = userService.getFollowing(userId, page, size);
         return ResponseEntity.ok(ApiResponse.success("Following fetched", following));
     }

@@ -26,15 +26,15 @@ public class PostController {
 
     @GetMapping("/feed")
     public ResponseEntity<ApiResponse<Page<Post>>> getFeed(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size) {
         return ResponseEntity.ok(ApiResponse.success("Feed fetched", postService.getFeed(page, size)));
     }
 
     @GetMapping("/trending")
     public ResponseEntity<ApiResponse<Page<Post>>> getTrending(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size) {
         return ResponseEntity.ok(ApiResponse.success("Trending fetched", postService.getTrending(page, size)));
     }
 
@@ -45,22 +45,22 @@ public class PostController {
 
     @GetMapping("/hashtag/{tag}")
     public ResponseEntity<ApiResponse<Page<Post>>> getHashtagPosts(
-            @PathVariable String tag,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @PathVariable("tag") String tag,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size) {
         return ResponseEntity.ok(ApiResponse.success("Posts fetched", postService.getHashtagPosts(tag, page, size)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Post>> getPost(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Post>> getPost(@PathVariable("id") Long id) {
         return ResponseEntity.ok(ApiResponse.success("Post fetched", postService.getPost(id)));
     }
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<ApiResponse<Page<Post>>> getUserPosts(
-            @PathVariable Long userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @PathVariable("userId") Long userId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size) {
         return ResponseEntity.ok(ApiResponse.success("Posts fetched", postService.getUserPosts(userId, page, size)));
     }
 
@@ -76,7 +76,7 @@ public class PostController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Post>> updatePost(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @RequestBody CreatePostRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
         Post post = postService.updatePost(id, principal.getUserId(), request);
@@ -85,7 +85,7 @@ public class PostController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deletePost(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @AuthenticationPrincipal UserPrincipal principal) {
         postService.deletePost(id, principal.getUserId());
         return ResponseEntity.ok(ApiResponse.success("Post deleted", null));
@@ -111,21 +111,21 @@ public class PostController {
 
     @PostMapping("/{id}/like")
     public ResponseEntity<ApiResponse<Void>> like(
-            @PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal) {
+            @PathVariable("id") Long id, @AuthenticationPrincipal UserPrincipal principal) {
         postService.likePost(id, principal.getUserId());
         return ResponseEntity.ok(ApiResponse.success("Liked", null));
     }
 
     @DeleteMapping("/{id}/like")
     public ResponseEntity<ApiResponse<Void>> unlike(
-            @PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal) {
+            @PathVariable("id") Long id, @AuthenticationPrincipal UserPrincipal principal) {
         postService.unlikePost(id, principal.getUserId());
         return ResponseEntity.ok(ApiResponse.success("Unliked", null));
     }
 
     @PostMapping("/{id}/bookmark")
     public ResponseEntity<ApiResponse<Void>> bookmark(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @RequestBody(required = false) Map<String, String> body,
             @AuthenticationPrincipal UserPrincipal principal) {
         String col = body != null ? body.get("collectionName") : null;
@@ -135,19 +135,19 @@ public class PostController {
 
     @DeleteMapping("/{id}/bookmark")
     public ResponseEntity<ApiResponse<Void>> removeBookmark(
-            @PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal) {
+            @PathVariable("id") Long id, @AuthenticationPrincipal UserPrincipal principal) {
         postService.removeBookmark(id, principal.getUserId());
         return ResponseEntity.ok(ApiResponse.success("Bookmark removed", null));
     }
 
     @PostMapping("/{id}/share")
-    public ResponseEntity<ApiResponse<Void>> share(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> share(@PathVariable("id") Long id) {
         postService.sharePost(id);
         return ResponseEntity.ok(ApiResponse.success("Shared", null));
     }
 
     @PostMapping("/{id}/report")
-    public ResponseEntity<ApiResponse<Void>> report(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> report(@PathVariable("id") Long id) {
         return ResponseEntity.ok(ApiResponse.success("Reported", null));
     }
 
@@ -155,15 +155,15 @@ public class PostController {
 
     @GetMapping("/{id}/comments")
     public ResponseEntity<ApiResponse<Page<Comment>>> getComments(
-            @PathVariable Long id,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @PathVariable("id") Long id,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size) {
         return ResponseEntity.ok(ApiResponse.success("Comments fetched", postService.getComments(id, page, size)));
     }
 
     @PostMapping("/{id}/comments")
     public ResponseEntity<ApiResponse<Comment>> addComment(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @RequestBody Map<String, Object> body,
             @AuthenticationPrincipal UserPrincipal principal) {
         String content = (String) body.get("content");
@@ -177,15 +177,15 @@ public class PostController {
 
     @GetMapping("/bookmarks/user")
     public ResponseEntity<ApiResponse<Page<Post>>> getUserBookmarks(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
             @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(ApiResponse.success("Bookmarks fetched",
                 postService.getUserBookmarkedPosts(principal.getUserId(), page, size)));
     }
 
     @GetMapping("/user/{userId}/liked")
-    public ResponseEntity<ApiResponse<List<Long>>> getLikedPostIds(@PathVariable Long userId) {
+    public ResponseEntity<ApiResponse<List<Long>>> getLikedPostIds(@PathVariable("userId") Long userId) {
         return ResponseEntity.ok(ApiResponse.success("Liked posts fetched", postService.getUserLikedPostIds(userId)));
     }
 
@@ -193,13 +193,13 @@ public class PostController {
 
     @GetMapping("/reports")
     public ResponseEntity<ApiResponse<Page<Object>>> getReports(
-            @RequestParam(defaultValue = "0") int page) {
+            @RequestParam(name = "page", defaultValue = "0") int page) {
         return ResponseEntity.ok(ApiResponse.success("Reports fetched",
                 org.springframework.data.domain.Page.empty()));
     }
 
     @PutMapping("/reports/{reportId}/resolve")
-    public ResponseEntity<ApiResponse<Void>> resolveReport(@PathVariable Long reportId) {
+    public ResponseEntity<ApiResponse<Void>> resolveReport(@PathVariable("reportId") Long reportId) {
         return ResponseEntity.ok(ApiResponse.success("Report resolved", null));
     }
 }

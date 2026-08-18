@@ -16,7 +16,7 @@ public class SearchController {
     private final SearchService searchService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Map<String, Object>>> globalSearch(@RequestParam String q) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> globalSearch(@RequestParam(name = "q") String q) {
         return ResponseEntity.ok(ApiResponse.success("Search results", searchService.globalSearch(q)));
     }
 }

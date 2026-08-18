@@ -21,8 +21,8 @@ public class NotificationController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<Notification>>> getNotifications(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
             @AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(ApiResponse.success("Notifications fetched",
                 notificationService.getNotifications(principal.getUserId(), page, size)));
@@ -37,7 +37,7 @@ public class NotificationController {
 
     @PutMapping("/{id}/read")
     public ResponseEntity<ApiResponse<Void>> markAsRead(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @AuthenticationPrincipal UserPrincipal principal) {
         notificationService.markAsRead(id, principal.getUserId());
         return ResponseEntity.ok(ApiResponse.success("Marked as read", null));
