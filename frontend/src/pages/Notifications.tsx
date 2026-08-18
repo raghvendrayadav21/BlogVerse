@@ -23,6 +23,7 @@ export default function NotificationsPage() {
     mutationFn: () => notificationsApi.markAllAsRead().catch(() => {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
       markAllNotificationsRead();
       toast.success('All notifications marked as read! ✨');
     },
@@ -32,6 +33,7 @@ export default function NotificationsPage() {
     mutationFn: (id: number) => notificationsApi.markAsRead(id).catch(() => {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
     },
   });
 

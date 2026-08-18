@@ -88,7 +88,7 @@ interface UIStore {
 export const useUIStore = create<UIStore>((set) => ({
   isSidebarOpen: false,
   isCreatePostOpen: false,
-  unreadNotificationsCount: 2,
+  unreadNotificationsCount: 0,
   toggleSidebar: () => set((s) => ({ isSidebarOpen: !s.isSidebarOpen })),
   closeSidebar: () => set({ isSidebarOpen: false }),
   openCreatePost: () => set({ isCreatePostOpen: true }),

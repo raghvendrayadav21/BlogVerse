@@ -60,6 +60,7 @@ const defaultCommunityPosts: Post[] = [
 // ─── Post Card Component ────────────────────────────────────────────────
 function PostCard({ post }: { post: Post }) {
   const { theme } = useThemeStore();
+  const { user: currentUser } = useAuthStore();
   const isDark = theme === 'dark';
   const [liked, setLiked] = useState(post.isLiked ?? false);
   const [likeCount, setLikeCount] = useState(post.likeCount);
@@ -80,6 +81,14 @@ function PostCard({ post }: { post: Post }) {
         setLikeCount(c => c + 1);
         setLiked(true);
         await postsApi.likePost(post.id).catch(() => {});
+        if (post.userId && post.userId !== currentUser?.userId) {
+          await notificationsApi.createNotification({
+            recipientId: post.userId,
+            type: 'LIKE',
+            message: 'liked your post',
+            postId: post.id,
+          }).catch(() => {});
+        }
       }
     } catch {
       toast.error('Failed to update like');

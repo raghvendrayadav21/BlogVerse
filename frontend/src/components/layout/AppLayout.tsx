@@ -4,6 +4,8 @@ import { useAuthStore, useThemeStore, useUIStore } from '../../store';
 import { authApi } from '../../api/auth';
 import { getRefreshToken } from '../../api/client';
 import toast from 'react-hot-toast';
+import { useQuery } from '@tanstack/react-query';
+import { notificationsApi } from '../../api/notifications';
 
 const navItems = [
   { icon: Home, label: 'Home', path: '/feed' },
@@ -19,9 +21,26 @@ const navItems = [
 export default function AppLayout() {
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
-  const { isSidebarOpen, toggleSidebar, closeSidebar, unreadNotificationsCount } = useUIStore();
+  const { isSidebarOpen, toggleSidebar, closeSidebar, unreadNotificationsCount, setUnreadNotificationsCount } = useUIStore();
   const navigate = useNavigate();
   const location = useLocation();
+
+  useQuery({
+    queryKey: ['unreadNotificationCount'],
+    queryFn: async () => {
+      if (!user) return 0;
+      try {
+        const res = await notificationsApi.getUnreadCount();
+        if (res.success && typeof res.data === 'number') {
+          setUnreadNotificationsCount(res.data);
+          return res.data;
+        }
+      } catch (err) {}
+      return 0;
+    },
+    enabled: !!user,
+    refetchInterval: 10000, // Poll every 10 seconds for real-time notifications
+  });
 
   const isDark = theme === 'dark';
   const bgPrimary = isDark ? '#0a0a0f' : '#f9fafb';

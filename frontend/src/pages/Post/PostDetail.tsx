@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Heart, MessageCircle, Share2, Bookmark, ArrowLeft, Send, Clock, UserPlus, Trash2, Edit3 } from 'lucide-react';
 import { postsApi } from '../../api/posts';
+import { notificationsApi } from '../../api/notifications';
 import { useAuthStore, useThemeStore } from '../../store';
 import { formatDistanceToNow } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -45,7 +46,18 @@ export default function PostDetailPage() {
 
   // Add Comment Mutation
   const addCommentMutation = useMutation({
-    mutationFn: (content: string) => postsApi.addComment(id, content),
+    mutationFn: async (content: string) => {
+      const res = await postsApi.addComment(id, content);
+      if (post && post.userId && post.userId !== currentUser?.userId) {
+        await notificationsApi.createNotification({
+          recipientId: post.userId,
+          type: 'COMMENT',
+          message: 'commented on your post',
+          postId: post.id,
+        }).catch(() => {});
+      }
+      return res;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', id] });
       setCommentInput('');
@@ -65,6 +77,14 @@ export default function PostDetailPage() {
       } else {
         await postsApi.likePost(id).catch(() => {});
         setLikeCount(c => c + 1);
+        if (post && post.userId && post.userId !== currentUser?.userId) {
+          await notificationsApi.createNotification({
+            recipientId: post.userId,
+            type: 'LIKE',
+            message: 'liked your post',
+            postId: post.id,
+          }).catch(() => {});
+        }
       }
       setLiked(!liked);
     } catch {
