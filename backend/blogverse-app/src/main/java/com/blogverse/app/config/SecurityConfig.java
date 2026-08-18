@@ -43,8 +43,9 @@ public class SecurityConfig {
                     "/api/auth/login",
                     "/api/auth/refresh",
                     "/api/auth/google").permitAll()
-                // Public read endpoints
+                // Public GET endpoints
                 .requestMatchers(HttpMethod.GET,
+                    "/api/auth/health",
                     "/api/posts/feed",
                     "/api/posts/trending",
                     "/api/posts/tags/trending",
