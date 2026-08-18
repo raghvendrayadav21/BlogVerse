@@ -10,14 +10,14 @@ import java.util.List;
 
 public interface PostRepository extends MongoRepository<Post, Long> {
     Page<Post> findByStatusOrderByCreatedAtDesc(String status, Pageable pageable);
-    Page<Post> findByAuthorIdAndStatusOrderByCreatedAtDesc(Long authorId, String status, Pageable pageable);
-    Page<Post> findByAuthorIdOrderByCreatedAtDesc(Long authorId, Pageable pageable);
-    Page<Post> findByTagsContainingAndStatusOrderByCreatedAtDesc(String tag, String status, Pageable pageable);
+    Page<Post> findByUserIdAndStatusOrderByCreatedAtDesc(Long userId, String status, Pageable pageable);
+    Page<Post> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    Page<Post> findByHashtagsContainingAndStatusOrderByCreatedAtDesc(String tag, String status, Pageable pageable);
     Page<Post> findByStatusOrderByLikesCountDesc(String status, Pageable pageable);
 
     @Query("{'status': 'PUBLISHED', $or: [{'title': {$regex: ?0, $options: 'i'}}, {'content': {$regex: ?0, $options: 'i'}}]}")
     List<Post> searchPublished(String query);
 
-    long countByAuthorIdAndStatus(Long authorId, String status);
+    long countByUserIdAndStatus(Long userId, String status);
     long countByStatus(String status);
 }

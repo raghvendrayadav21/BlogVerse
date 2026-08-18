@@ -16,9 +16,9 @@ public class Post {
     @Id
     private Long id;
 
-    private Long authorId;
-    private String authorUsername;
-    private String authorProfileImageUrl;
+    private Long userId;
+    private String username;
+    private String userProfileImage;
     private String authorBio;
 
     private String title;
@@ -33,7 +33,7 @@ public class Post {
     private String status = "PUBLISHED"; // PUBLISHED, DRAFT
 
     @Builder.Default
-    private List<String> tags = new ArrayList<>();
+    private List<String> hashtags = new ArrayList<>();
 
     @Builder.Default
     private Long likesCount = 0L;
@@ -51,7 +51,7 @@ public class Post {
     private Long viewCount = 0L;
 
     @Builder.Default
-    private Integer readTime = 1;
+    private Integer readingTimeMinutes = 1;
 
     @Builder.Default
     private boolean featured = false;

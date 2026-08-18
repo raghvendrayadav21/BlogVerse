@@ -24,8 +24,8 @@ public class PostService {
     private final CommentRepository commentRepository;
     private final SequenceGeneratorService sequenceGenerator;
 
-    public Post createPost(Long authorId, CreatePostRequest req, boolean isDraft) {
-        User author = userRepository.findById(authorId)
+    public Post createPost(Long userId, CreatePostRequest req, boolean isDraft) {
+        User author = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         String status = isDraft ? "DRAFT" : (req.getStatus() != null ? req.getStatus() : "PUBLISHED");
@@ -33,19 +33,26 @@ public class PostService {
         int wordCount = content.split("\\s+").length;
         int readTime = Math.max(1, wordCount / 200);
 
+        // Accept tags or hashtags from payload
+        List<String> postTags = req.getTags();
+        if (postTags == null || postTags.isEmpty()) {
+            // Also check req.getHashtags if it maps in any payload
+            postTags = new ArrayList<>();
+        }
+
         Post post = Post.builder()
                 .id(sequenceGenerator.generateSequence(SequenceGeneratorService.POST_SEQ))
-                .authorId(authorId)
-                .authorUsername(author.getUsername())
-                .authorProfileImageUrl(author.getProfileImageUrl())
+                .userId(userId)
+                .username(author.getUsername())
+                .userProfileImage(author.getProfileImageUrl())
                 .authorBio(author.getBio())
                 .title(req.getTitle())
                 .content(content)
                 .excerpt(req.getExcerpt() != null ? req.getExcerpt() : truncate(content, 200))
                 .coverImageUrl(req.getCoverImageUrl())
                 .status(status)
-                .tags(req.getTags() != null ? req.getTags() : new ArrayList<>())
-                .readTime(readTime)
+                .hashtags(postTags)
+                .readingTimeMinutes(readTime)
                 .build();
 
         post = postRepository.save(post);
@@ -60,7 +67,7 @@ public class PostService {
     public Post updatePost(Long postId, Long userId, CreatePostRequest req) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("Post not found"));
-        if (!post.getAuthorId().equals(userId)) {
+        if (!post.getUserId().equals(userId)) {
             throw new IllegalArgumentException("Not authorized to edit this post");
         }
 
@@ -72,7 +79,7 @@ public class PostService {
         if (req.getExcerpt() != null) post.setExcerpt(req.getExcerpt());
         if (req.getCoverImageUrl() != null) post.setCoverImageUrl(req.getCoverImageUrl());
         if (req.getStatus() != null) post.setStatus(req.getStatus());
-        if (req.getTags() != null) post.setTags(req.getTags());
+        if (req.getTags() != null) post.setHashtags(req.getTags());
         post.setUpdatedAt(LocalDateTime.now());
 
         return postRepository.save(post);
@@ -81,7 +88,7 @@ public class PostService {
     public void deletePost(Long postId, Long userId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("Post not found"));
-        if (!post.getAuthorId().equals(userId)) {
+        if (!post.getUserId().equals(userId)) {
             throw new IllegalArgumentException("Not authorized to delete this post");
         }
         postRepository.delete(post);
@@ -103,15 +110,15 @@ public class PostService {
     }
 
     public Page<Post> getUserPosts(Long userId, int page, int size) {
-        return postRepository.findByAuthorIdAndStatusOrderByCreatedAtDesc(userId, "PUBLISHED", PageRequest.of(page, size));
+        return postRepository.findByUserIdAndStatusOrderByCreatedAtDesc(userId, "PUBLISHED", PageRequest.of(page, size));
     }
 
     public Page<Post> getHashtagPosts(String tag, int page, int size) {
-        return postRepository.findByTagsContainingAndStatusOrderByCreatedAtDesc(tag, "PUBLISHED", PageRequest.of(page, size));
+        return postRepository.findByHashtagsContainingAndStatusOrderByCreatedAtDesc(tag, "PUBLISHED", PageRequest.of(page, size));
     }
 
     public List<Post> getUserDrafts(Long userId) {
-        return postRepository.findByAuthorIdOrderByCreatedAtDesc(userId, PageRequest.of(0, 50))
+        return postRepository.findByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(0, 50))
                 .stream().filter(p -> "DRAFT".equals(p.getStatus())).collect(Collectors.toList());
     }
 
@@ -199,7 +206,7 @@ public class PostService {
     public List<Map<String, Object>> getTrendingTags() {
         Map<String, Long> tagCounts = new HashMap<>();
         postRepository.findByStatusOrderByCreatedAtDesc("PUBLISHED", PageRequest.of(0, 200))
-                .forEach(post -> post.getTags().forEach(tag -> tagCounts.merge(tag, 1L, Long::sum)));
+                .forEach(post -> post.getHashtags().forEach(tag -> tagCounts.merge(tag, 1L, Long::sum)));
 
         List<Map<String, Object>> result = new ArrayList<>();
         long[] idCounter = {1};
