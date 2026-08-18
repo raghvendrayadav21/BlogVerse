@@ -12,10 +12,9 @@ import type { User as UserType } from '../../types';
 import { GoogleAuthModal } from '../../components/auth/GoogleAuthModal';
 
 const schema = z.object({
-  username: z.string().min(3, 'At least 3 characters').max(50).regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers, underscores'),
+  username: z.string().min(3, 'At least 3 characters').max(30).regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers, underscores'),
   email: z.string().email('Enter a valid email'),
-  password: z.string().min(8, 'At least 8 characters')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Need uppercase, lowercase, and a number'),
+  password: z.string().min(6, 'At least 6 characters'),
   confirmPassword: z.string(),
   bio: z.string().max(500).optional(),
 }).refine(data => data.password === data.confirmPassword, {
